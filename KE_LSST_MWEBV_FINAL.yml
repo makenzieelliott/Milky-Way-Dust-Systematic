@@ -1,0 +1,367 @@
+ # Original input file: /global/cfs/cdirs/desc-sn/SNANA/SURVEYS/LSST/USERS/tztang/DEBASS/TZ_EP/TZ_EP-LSST.yml
+# Submitted on login node: login10
+# Original input file: /global/cfs/cdirs/desc-sn/SNANA/SURVEYS/LSST/USERS/erp28/RVroman/EP-LSST.yml
+# Submitted on login node: login28
+#GLOBAL:
+#  CFG_PATH: $SNANA_LSST_ROOT/starterKits/pippin/cfg_lsst_perlmutter.yml
+
+ALIAS_SIM:
+  BASE_SIM: &base_sim
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/SNANALSST_basesim.input
+    GENPDF_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/DES-SN5YR_DES_S3_G10.DAT
+    GENPDF_OPTMASK: 1
+    KCOR_FILE: $SNDATA_ROOT/kcor/LSST/baseline/kcor_LSST.fits.gz
+#    GENFILTERS: griz
+    GENMODEL: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.SCHLAFLY
+    RV_MWCOLORLAW: 3.1
+    OPT_MWCOLORLAW: 99
+    OPT_MWEBV: 1
+    GENSIGMA_MWEBV_RATIO: 0.0
+
+  APPEND_FITRES: &append_fitres
+    APPEND_TABLE_VARLIST: RA DEC TGAPMAX TrestMIN TrestMAX
+
+  COV_OPTS_ANALYSIS: &cov_opts_analysis
+      COVOPTS:
+        - "[NOSYS]                 [=DEFAULT,=DEFAULT]"
+        - "[COSMO]                 [+cosmo,=DEFAULT]"
+        - "[DESIGR]                [+ebv_desi_gr_cosmo,=DEFAULT]"
+        - "[DESIRZ]                [+ebv_desi_rz_cosmo,=DEFAULT]"
+        - "[MUDUR6]                [+ebv_mudur_6_cosmo,=DEFAULT]"
+        - "[MUDUR15]               [+ebv_mudur_15_cosmo,=DEFAULT]"
+        - "[CSFD]                  [+ebv_csfd_cosmo,=DEFAULT]"
+        - "[PLANCK]       	   [+ebv_planck_cosmo,=DEFAULT]"
+        - "[SCALE]      	   [+ebv_scale_notrain,=DEFAULT]"
+        - "[DESIRZ_NOTRAIN]        [+ebv_desi_rz_mwebv,=DEFAULT]"
+
+SIM:
+  DATA_LSST_LOWZ:
+    IA:
+      <<: *base_sim
+      HOSTLIB_FILE:  /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/baseline_v3.3_10yrs_UchuuDR2_UM_z0p00_zmax0p1739_mock_07_SNANA.HOSTLIB
+    GLOBAL:
+      GENRANGE_REDSHIFT: 0.02 .17
+      NGEN_UNIT: 1.273
+      RANSEED_REPEAT: 10 12345
+      BATCH_MEM: 10GB
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_Midway2b.TEMPLATE 40
+      SIMLIB_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/simlibs/PLASTICC_SCHLAFLY_WFD.SIMLIB
+
+  DATA_LSST_HIGHZ:
+    IA:
+      <<: *base_sim
+      HOSTLIB_FILE:  /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/LSST_HIGHZ_HOST.HOSTLIB
+      HOSTLIB_STOREPAR: ZTRUE_CMB
+    GLOBAL:
+      GENRANGE_REDSHIFT: .17 1.25
+      NGEN_UNIT: 0.005825
+      RANSEED_REPEAT: 10 12345
+      BATCH_MEM: 10GB
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_Midway2b.TEMPLATE 40
+      SIMLIB_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/simlibs/PLASTICC_SCHLAFLY_DDF.SIMLIB
+
+  BIASCOR_LOWZ_SCHLAFLY:
+      EXTERNAL: $PIPPIN_OUTPUT/KE_BIASCOR/1_SIM/BIASCOR_LOWZ_SCHLAFLY
+
+  BIASCOR_HIGHZ_SCHLAFLY:
+      EXTERNAL: $PIPPIN_OUTPUT/KE_BIASCOR/1_SIM/BIASCOR_HIGHZ_SCHLAFLY
+
+  BIASCOR_LOWZ_DESIRZ:
+      EXTERNAL: $PIPPIN_OUTPUT/KE_BIASCOR/1_SIM/BIASCOR_LOWZ_DESIRZ
+
+  BIASCOR_HIGHZ_DESIRZ:
+      EXTERNAL: $PIPPIN_OUTPUT/KE_BIASCOR/1_SIM/BIASCOR_HIGHZ_DESIRZ
+
+LCFIT:
+  FIT_DATA_LSST_LOWZ:
+    MASK: DATA_LSST_LOWZ
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/fit_cfg.nml
+    FITOPTS:
+      - /project2/rkessler/SURVEYS/LSST/USERS/kenziae/DUST-MAPS-FILLED-ALLZ.FITOPTS
+    SNLCINP:
+      SNCID_LIST_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/filledallz/common_snids_lowz_prelc.txt
+      USE_MINOS: F
+      SIM_HEADER_OVERRIDE_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/filledallz/SIM-SN-SCHLAFLY-MWEBV_allz.txt
+    FITINP:
+      FITMODEL_NAME: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.SCHLAFLY
+      FILTLIST_FIT: griz
+    OPTS:
+      <<: *append_fitres
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 2GB
+      OPT_SNCID_LIST: 1
+
+  FIT_DATA_LSST_HIGHZ:
+    MASK: DATA_LSST_HIGHZ
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/fit_cfg.nml
+    FITOPTS:
+      - /project2/rkessler/SURVEYS/LSST/USERS/kenziae/DUST-MAPS-FILLED-ALLZ.FITOPTS
+    SNLCINP:
+      SNCID_LIST_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/filledallz/common_snids_highz_prelc.txt
+      USE_MINOS: F
+      SIM_HEADER_OVERRIDE_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/filledallz/SIM-SN-SCHLAFLY-MWEBV_allz.txt
+    FITINP:
+      FITMODEL_NAME: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.SCHLAFLY
+      FILTLIST_FIT: griz
+    OPTS:
+      <<: *append_fitres
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_Midway2b.TEMPLATE 50
+      BATCH_MEM: 8GB
+      OPT_SNCID_LIST: 1
+
+  FIT_BIASCOR_LOWZ_SCHLAFLY:
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/SNANALSST_basesim.input
+    MASK: BIASCOR_LOWZ_SCHLAFLY
+    EXTERNAL: $PIPPIN_OUTPUT/KE_BIASCOR/2_LCFIT/FIT_BIASCOR_LOWZ_SCHLAFLY_BIASCOR_LOWZ_SCHLAFLY
+
+  FIT_BIASCOR_HIGHZ_SCHLAFLY:
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/SNANALSST_basesim.input
+    MASK: BIASCOR_HIGHZ_SCHLAFLY
+    EXTERNAL: $PIPPIN_OUTPUT/KE_BIASCOR/2_LCFIT/FIT_BIASCOR_HIGHZ_SCHLAFLY_BIASCOR_HIGHZ_SCHLAFLY
+
+  FIT_BIASCOR_LOWZ_DESIRZ:
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/SNANALSST_basesim.input
+    MASK: BIASCOR_LOWZ_DESIRZ
+    EXTERNAL: $PIPPIN_OUTPUT/KE_BIASCOR/2_LCFIT/FIT_BIASCOR_LOWZ_DESIRZ_BIASCOR_LOWZ_DESIRZ
+
+  FIT_BIASCOR_HIGHZ_DESIRZ:
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/SNANALSST_basesim.input
+    MASK: BIASCOR_HIGHZ_DESIRZ
+    EXTERNAL: $PIPPIN_OUTPUT/KE_BIASCOR/2_LCFIT/FIT_BIASCOR_HIGHZ_DESIRZ_BIASCOR_HIGHZ_DESIRZ
+
+AGGREGATION:
+  AGG:
+
+
+MERGE:
+  MERGE:
+
+BIASCOR:
+  BBC_LOWZ_CHI2:
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/bbc_salt2mu_cfg.default
+    DATA: [FIT_DATA_LSST_LOWZ_DATA_LSST_LOWZ]
+    SIMFILE_BIASCOR: [FIT_BIASCOR_LOWZ_SCHLAFLY_BIASCOR_LOWZ_SCHLAFLY]
+    CONSISTENT_SAMPLE: False
+    OPTS:
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 16GB
+      u5: 1
+      zmax: 0.1
+
+      opt_biascor: 4336
+      fitflag_sigmb: 0
+      sigmb: 0
+      u2: 3
+      nbin_logmass: 2
+      sig1: 0.01
+      cid_select_file: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/common_cids_final_combined.txt
+      FITOPTS_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/DUST-MAPS-FILLED-ALLZ.FITOPTS
+
+  BBC_LSST_BIASCOR:
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/bbc_salt2mu_cfg.default
+#    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/BBC.input
+    DATA: [FIT_DATA_LSST_LOWZ_DATA_LSST_LOWZ, FIT_DATA_LSST_HIGHZ_DATA_LSST_HIGHZ]
+    SIMFILE_BIASCOR: [FIT_BIASCOR_LOWZ_SCHLAFLY_BIASCOR_LOWZ_SCHLAFLY, FIT_BIASCOR_HIGHZ_SCHLAFLY_BIASCOR_HIGHZ_SCHLAFLY]
+    CONSISTENT_SAMPLE: False
+    OPTS:
+      REPLACE_SIMFILE_BIASCOR:
+        ebv_desi_rz_cosmo: /scratch/midway2/rkessler/PIPPIN_OUTPUT/KE_LSST_MWEBV_BIASCOR/2_LCFIT/FIT_BIASCOR_LOWZ_DESIRZ_BIASCOR_LOWZ_DESIRZ/output/PIP_KE_BIASCOR_BIASCOR_LOWZ_DESIRZ/FITOPT000.FITRES.gz,/scratch/midway2/rkessler/PIPPIN_OUTPUT/KE_LSST_MWEBV_BIASCOR/2_LCFIT/FIT_BIASCOR_HIGHZ_DESIRZ_BIASCOR_HIGHZ_DESIRZ/output/PIP_KE_BIASCOR_BIASCOR_HIGHZ_DESIRZ/FITOPT000.FITRES.gz
+
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 30GB
+      u5: 1
+      zmax: 1.2
+
+      opt_biascor: 4336
+      u2: 3
+      nbin_logmass: 2
+      fitflag_sigmb: 1
+      sig1: 0.01
+      cid_select_file: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/common_cids_final_combined.txt
+      FITOPTS_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/DUST-MAPS-FILLED-ALLZ.FITOPTS
+
+  BBC_LSST_ALL:
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/bbc_salt2mu_cfg.default
+#    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/BBC.input
+    DATA: [FIT_DATA_LSST_LOWZ_DATA_LSST_LOWZ, FIT_DATA_LSST_HIGHZ_DATA_LSST_HIGHZ]
+    SIMFILE_BIASCOR: [FIT_BIASCOR_LOWZ_SCHLAFLY_BIASCOR_LOWZ_SCHLAFLY, FIT_BIASCOR_HIGHZ_SCHLAFLY_BIASCOR_HIGHZ_SCHLAFLY]
+    CONSISTENT_SAMPLE: False
+    OPTS:
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 30GB
+      u5: 1
+      zmax: 1.2
+
+      opt_biascor: 4336
+      u2: 3
+      nbin_logmass: 2
+      fitflag_sigmb: 1
+      sig1: 0.01
+      cid_select_file: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/common_cids_final_combined.txt
+      FITOPTS_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/DUST-MAPS-FILLED-ALLZ.FITOPTS
+ 
+  BBC_LSST_1YR:
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/bbc_salt2mu_cfg.default
+#    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/BBC.input
+    DATA: [FIT_DATA_LSST_LOWZ_DATA_LSST_LOWZ, FIT_DATA_LSST_HIGHZ_DATA_LSST_HIGHZ]
+    SIMFILE_BIASCOR: [FIT_BIASCOR_LOWZ_SCHLAFLY_BIASCOR_LOWZ_SCHLAFLY, FIT_BIASCOR_HIGHZ_SCHLAFLY_BIASCOR_HIGHZ_SCHLAFLY]
+    CONSISTENT_SAMPLE: False
+    OPTS:
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 30GB
+      u5: 1
+      zmax: 1.2
+
+      opt_biascor: 4336
+      u2: 3
+      nbin_logmass: 2
+      fitflag_sigmb: 1
+      sig1: 0.01
+      cid_select_file: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/common_cids_final_combined.txt
+      FITOPTS_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/DUST-MAPS-FILLED-ALLZ.FITOPTS
+      NSPLITRAN: 10
+
+  BBC_LSST_5YR:
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/bbc_salt2mu_cfg.default
+#    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/BBC.input
+    DATA: [FIT_DATA_LSST_LOWZ_DATA_LSST_LOWZ, FIT_DATA_LSST_HIGHZ_DATA_LSST_HIGHZ]
+    SIMFILE_BIASCOR: [FIT_BIASCOR_LOWZ_SCHLAFLY_BIASCOR_LOWZ_SCHLAFLY, FIT_BIASCOR_HIGHZ_SCHLAFLY_BIASCOR_HIGHZ_SCHLAFLY]
+    CONSISTENT_SAMPLE: False
+    OPTS:
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 30GB
+      u5: 1
+      zmax: 1.2
+
+      opt_biascor: 4336
+      u2: 3
+      nbin_logmass: 2
+      fitflag_sigmb: 1
+      sig1: 0.01
+      cid_select_file: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/common_cids_final_combined.txt
+      FITOPTS_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/DUST-MAPS-FILLED-ALLZ.FITOPTS
+      NSPLITRAN: 2
+
+CREATE_COV:
+  COV_LOWZ_CHI2:
+    MASK: BBC_LOWZ_CHI2
+    OPTS:
+      BATCH_MEM: 15GB
+      BATCH_WALLTIME: 04:00:00
+      BINNED: True
+      REBINNED_X1: 4
+      REBINNED_C: 8
+#      REBINNED_Z: 10
+      <<: *cov_opts_analysis
+      FITOPT_SCALES:
+        MWEBV: 0
+        SALT: 0
+      EXTRA_OPTS:
+        --write_mask_cov 1
+
+  COV_LSST_ALL:
+    MASK: BBC_LSST_ALL
+    OPTS:
+      BATCH_MEM: 15GB
+      BATCH_WALLTIME: 04:00:00
+      BINNED: True
+      REBINNED_X1: 4
+      REBINNED_C: 8
+#      REBINNED_Z: 10
+      <<: *cov_opts_analysis
+      FITOPT_SCALES:
+        MWEBV: 0
+        SALT: 0
+      EXTRA_OPTS:
+        --write_mask_cov 1
+
+  COV_LSST_1YR:
+    MASK: BBC_LSST_1YR
+    OPTS:
+      BATCH_MEM: 15GB
+      BATCH_WALLTIME: 04:00:00
+      BINNED: True
+      REBINNED_X1: 4
+      REBINNED_C: 8
+#      REBINNED_Z: 10
+      <<: *cov_opts_analysis
+      FITOPT_SCALES:
+        MWEBV: 0
+        SALT: 0
+      EXTRA_OPTS:
+        --write_mask_cov 1
+
+  COV_LSST_5YR:
+    MASK: BBC_LSST_5YR
+    OPTS:
+      BATCH_MEM: 15GB
+      BATCH_WALLTIME: 04:00:00
+      BINNED: True
+      REBINNED_X1: 4
+      REBINNED_C: 8
+#      REBINNED_Z: 10
+      <<: *cov_opts_analysis
+      FITOPT_SCALES:
+        MWEBV: 0
+        SALT: 0
+      EXTRA_OPTS:
+        --write_mask_cov 1
+
+COSMOFIT:
+  WFIT:
+    WFIT_LOWZ_CHI2:
+      MASK: COV_LOWZ_CHI2
+      OPTS:
+        BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 40
+        BATCH_MEM: 15GB
+        WFITOPT_GLOBAL: -outfile_chi2grid chi2grid.txt
+        WFITOPTS:
+          - /CMB_W0WA_02/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.02
+          - /CMB_W0WA_002/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.002
+          - /CMB_W0WA_NOSNRMS/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201
+
+    WFIT_LSST_ALL:
+      MASK: COV_LSST_ALL
+      OPTS:
+        BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 40
+        BATCH_MEM: 15GB
+        WFITOPT_GLOBAL: -outfile_chi2grid chi2grid.txt
+        WFITOPTS:
+          #- /cmb18_pri/ -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 0 -w0steps 101 -ommin 0.2 -ommax 0.4 -omsteps 201
+#          - /SN_W_02/ -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.02
+#          - /SN_W0WA_02/ -wa -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.02
+          - /CMB_W0WA_02/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.02
+#          - /SN_W_002/ -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.002
+#          - /SN_W0WA_002/ -wa -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.002
+          - /CMB_W0WA_002/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.002
+#          - /SN_W_NOSNRMS/ -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -ommin 0.0 -ommax 0.5 -omsteps 201
+#          - /SN_W0WA_NOSNRMS/ -wa -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201
+          - /CMB_W0WA_NOSNRMS/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201
+          - /CMB_W0WA_FINER_NOSNRMS/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -1.4 -w0max -0.6 -w0steps 301 -wamin -1.2 -wamax 0.8 -wasteps 301 -ommin 0.25 -ommax 0.35 -omsteps 301
+
+    WFIT_LSST_1YR:
+      MASK: COV_LSST_1YR
+      OPTS:
+        INPDIR:
+          - /scratch/midway2/rkessler/PIPPIN_OUTPUT/KE_LSST_MWEBV_BIASCOR/7_CREATE_COV/COV_LSST_1YR/output/COV_LSST_1YR_BBC_LSST_1YR_OUTPUT_BBCFIT-0001
+        BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 40
+        BATCH_MEM: 15GB
+        WFITOPT_GLOBAL: -outfile_chi2grid chi2grid.txt
+        WFITOPTS:
+          - /CMB_W0WA_02/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.02
+          - /CMB_W0WA_002/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.002
+          - /CMB_W0WA_NOSNRMS/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201
+
+    WFIT_LSST_5YR:
+      MASK: COV_LSST_5YR
+      OPTS:
+        INPDIR:
+          - /scratch/midway2/rkessler/PIPPIN_OUTPUT/KE_LSST_MWEBV_BIASCOR/7_CREATE_COV/COV_LSST_5YR/output/COV_LSST_5YR_BBC_LSST_5YR_OUTPUT_BBCFIT-0001
+        BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 40
+        BATCH_MEM: 15GB
+        WFITOPT_GLOBAL: -outfile_chi2grid chi2grid.txt
+        WFITOPTS:
+          - /CMB_W0WA_02/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.02
+          - /CMB_W0WA_002/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201 -snrms 0.002
+          - /CMB_W0WA_NOSNRMS/ -wa -cmb_sim -sigma_Rcmb 0.0057 -speed_flag_chi2 2 -w0min -2 -w0max 1 -w0steps 201 -wamin -2 -wamax 2 -wasteps 201 -ommin 0.0 -ommax 0.5 -omsteps 201
+
