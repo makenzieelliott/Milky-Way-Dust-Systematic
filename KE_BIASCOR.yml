@@ -1,0 +1,140 @@
+# Original input file: /global/cfs/cdirs/desc-sn/SNANA/SURVEYS/LSST/USERS/tztang/DEBASS/TZ_EP/TZ_EP-LSST.yml
+# Submitted on login node: login10
+# Original input file: /global/cfs/cdirs/desc-sn/SNANA/SURVEYS/LSST/USERS/erp28/RVroman/EP-LSST.yml
+# Submitted on login node: login28
+#GLOBAL:
+#  CFG_PATH: $SNANA_LSST_ROOT/starterKits/pippin/cfg_lsst_perlmutter.yml
+
+ALIAS_SIM:
+  BASE_SIM: &base_sim
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/SNANALSST_basesim.input
+    GENPDF_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/DES-SN5YR_DES_S3_G10.DAT
+    GENPDF_OPTMASK: 1
+    KCOR_FILE: $SNDATA_ROOT/kcor/LSST/baseline/kcor_LSST.fits.gz
+#    GENFILTERS: griz
+#    GENMODEL: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.SCHLAFLY
+    RV_MWCOLORLAW: 3.1
+    OPT_MWCOLORLAW: 99
+    OPT_MWEBV: 1
+    GENSIGMA_MWEBV_RATIO: 0.0
+
+  APPEND_FITRES: &append_fitres
+    APPEND_TABLE_VARLIST: RA DEC TGAPMAX TrestMIN TrestMAX
+
+SIM:
+  BIASCOR_LOWZ_SCHLAFLY:
+    IA:
+      <<: *base_sim
+      HOSTLIB_FILE:  /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/baseline_v3.3_10yrs_UchuuDR2_UM_z0p00_zmax0p1739_mock_07_SNANA.HOSTLIB
+      GENMODEL: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.SCHLAFLY
+    GLOBAL:
+      GENRANGE_REDSHIFT: 0.02 0.17
+      NGEN_UNIT: 2
+      RANSEED_REPEAT: 20 12345
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_Midway2b.TEMPLATE 40
+      BATCH_MEM: 10GB
+      SIMLIB_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/simlibs/PLASTICC_SCHLAFLY_WFD.SIMLIB
+
+  BIASCOR_HIGHZ_SCHLAFLY:
+    IA:
+      <<: *base_sim
+      HOSTLIB_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/LSST_HIGHZ_HOST.HOSTLIB
+      GENMODEL: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.SCHLAFLY
+    GLOBAL:
+      GENRANGE_REDSHIFT: 0.17 1.25
+      NGEN_UNIT: .03
+      RANSEED_REPEAT: 20 12345
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_Midway2b.TEMPLATE 40
+      BATCH_MEM: 10GB
+      SIMLIB_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/simlibs/PLASTICC_SCHLAFLY_DDF.SIMLIB
+
+  BIASCOR_LOWZ_DESIRZ:
+    IA:
+      <<: *base_sim
+      HOSTLIB_FILE:  /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/baseline_v3.3_10yrs_UchuuDR2_UM_z0p00_zmax0p1739_mock_07_SNANA.HOSTLIB
+      GENMODEL: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.DESIRZ
+    GLOBAL:
+      GENRANGE_REDSHIFT: 0.02 0.17
+      NGEN_UNIT: 2
+      RANSEED_REPEAT: 20 12345
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_Midway2b.TEMPLATE 40
+      BATCH_MEM: 10GB
+      SIMLIB_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/simlibs/PLASTICC_DESI_RZ_WFD.SIMLIB
+
+  BIASCOR_HIGHZ_DESIRZ:
+    IA:
+      <<: *base_sim
+      HOSTLIB_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/LSST_HIGHZ_HOST.HOSTLIB
+      GENMODEL: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.DESIRZ
+    GLOBAL:
+      GENRANGE_REDSHIFT: 0.17 1.25
+      NGEN_UNIT: .03
+      RANSEED_REPEAT: 20 12345
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_Midway2b.TEMPLATE 40
+      BATCH_MEM: 10GB
+      SIMLIB_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/simlibs/PLASTICC_DESI_RZ_DDF.SIMLIB
+
+LCFIT:
+  FIT_BIASCOR_LOWZ_SCHLAFLY:
+    MASK: BIASCOR_LOWZ_SCHLAFLY
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/fit_cfg.nml
+    SNLCINP:
+      SNCID_LIST_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/schlaflyallzlc/common_snids_lowz_prelc.txt
+      USE_MINOS: F
+      SIM_HEADER_OVERRIDE_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/schlaflyallzlc/SIM-SN-SCHLAFLY-MWEBV_allz.txt
+    FITINP:
+      FITMODEL_NAME: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.SCHLAFLY
+      FILTLIST_FIT: griz
+    OPTS:
+      <<: *append_fitres
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 6GB
+      OPT_SNCID_LIST: 1
+
+  FIT_BIASCOR_HIGHZ_SCHLAFLY:
+    MASK: BIASCOR_HIGHZ_SCHLAFLY
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/fit_cfg.nml  
+    SNLCINP:
+      SNCID_LIST_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/schlaflyallzlc/common_snids_highz_prelc.txt
+      USE_MINOS: F
+      SIM_HEADER_OVERRIDE_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/schlaflyallzlc/SIM-SN-SCHLAFLY-MWEBV_allz.txt
+    FITINP:
+      FITMODEL_NAME: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.SCHLAFLY
+      FILTLIST_FIT: griz
+    OPTS:
+      <<: *append_fitres
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 10GB
+      OPT_SNCID_LIST: 1    
+
+  FIT_BIASCOR_LOWZ_DESIRZ:
+    MASK: BIASCOR_LOWZ_DESIRZ
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/fit_cfg.nml
+    SNLCINP:
+      SNCID_LIST_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/desirzallzlc/common_snids_lowz_prelc.txt
+      USE_MINOS: F
+      SIM_HEADER_OVERRIDE_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/desirzallzlc/SIM-SN-DESIRZ-MWEBV_allz.txt
+    FITINP:
+      FITMODEL_NAME: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.DESIRZ
+      FILTLIST_FIT: griz
+    OPTS:
+      <<: *append_fitres
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 6GB
+      OPT_SNCID_LIST: 1
+
+  FIT_BIASCOR_HIGHZ_DESIRZ:
+    MASK: BIASCOR_HIGHZ_DESIRZ
+    BASE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/yml_inputs/fit_cfg.nml
+    SNLCINP:
+      SNCID_LIST_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/desirzallzlc/common_snids_highz_prelc.txt
+      USE_MINOS: F
+      SIM_HEADER_OVERRIDE_FILE: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/desirzallzlc/SIM-SN-DESIRZ-MWEBV_allz.txt
+    FITINP:
+      FITMODEL_NAME: /project2/rkessler/SURVEYS/LSST/USERS/kenziae/SALT_RETRAIN/SALT3.DESIRZ
+      FILTLIST_FIT: griz
+    OPTS:
+      <<: *append_fitres
+      BATCH_INFO: sbatch $SBATCH_TEMPLATES/SBATCH_DEFAULT.TEMPLATE 50
+      BATCH_MEM: 10GB
+      OPT_SNCID_LIST: 1
